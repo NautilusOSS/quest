@@ -41,6 +41,43 @@ app.use(cors());
 //app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
 
+// cors
+
+const corsOptions = {
+  origin: "https://nautilus.sh", // Allow nautilus
+  methods: "GET,POST",
+  allowedHeaders: "Content-Type,Authorization",
+  optionsSuccessStatus: 200,
+};
+
+// middleware
+
+const validateAction = (req, res, next) => {
+  const { action, data } = req.body;
+  if (!action || !data) {
+    return res.status(400).json({ error: "Action and data are required" });
+  }
+  switch (action) {
+    case "connect_wallet":
+    case "sale_list_once": {
+      // check address validitiy
+      const ADDRESS_REGEX = /[A-Z0-9]{58}/;
+      const [{ address }] = data.wallets;
+      if (!ADDRESS_REGEX.test(address)) {
+        return res.status(400).json({ message: "Invalid address" });
+      }
+      break;
+    }
+    default:
+      return res
+        .status(400)
+        .json({ message: `Unsupported action '${action}'` });
+  }
+  next();
+};
+
+// routes
+
 app.get("/quest", async (req, res) => {
   const key = req.query.key;
   // validate key
@@ -48,26 +85,27 @@ app.get("/quest", async (req, res) => {
   return res.status(200).json({ message: "ok", results });
 });
 
-app.post("/quest", async (req, res) => {
+app.post("/quest", cors(corsOptions), async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Response-Type", "application/json");
-  const { action, data } = req.body;
-  if (!action || !data) {
-    return res.status(400).json({ error: "Action and data are required" });
-  }
-  const ADDRESS_REGEX = /[A-Z0-9]{58}/;
   try {
+    const [{ address }] = data.wallets;
+    const key = `${action}:${address}`;
+    const info = await db.getInfo(key);
     switch (action) {
       case "connect_wallet": {
-        const [{ address }] = data.wallets;
-        // check address validitiy
-        if (!ADDRESS_REGEX.test(address)) {
-          return res.status(401).json({ message: "Invalid address" });
-        }
-        const key = `${action}:${address}`;
-        const info = await db.getInfo(key);
         if (!info) await db.setInfo(key, Date.now());
-        return res.status(200).json({ message: "ok" });
+        break;
+      }
+      case "sale_list_once": {
+        if (!info) {
+          const minRound = 6534432; // 1 May
+          const { listings } = await axios.get(
+            `https://arc72-idx.nftnavigator.xyz/nft-indexer/v1/mp/listings?seller=${address}&min-round=${minRound}`
+          );
+          if (listings.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
       }
       default: {
         return res
@@ -75,6 +113,7 @@ app.post("/quest", async (req, res) => {
           .json({ message: `Unsupported action '${action}'` });
       }
     }
+    return res.status(200).json({ message: "ok" });
   } catch (e) {
     console.log(e);
     return res.status(503).json({ message: "Something went wrong" });
