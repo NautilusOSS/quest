@@ -52,6 +52,13 @@ Here's an example table:
 | 000006 | timed_sale_list_1minute | Timed Quest: List NFT 1 minute after mint<br />on High Forge | ONCE |
 | 000007 | timed_sale_list_15minutes | Timed Quest: List NFT 15 minute after 1st mint<br />on High Forge | ONCE |
 | 000008 | timed_sale_list_1hour | Timed Quest: List NFT 1 hour after mint<br />on High Forge | ONCE |
+| 000009 | hbml_pool_swap | Humble Quest: Make your first swap | ONCE |
+| 000010 | hmbl_pool_add | Humble Quest: Add liquidity | ONCE |
+| 000011 | hmbl_token_create | Humble Quest: Create token | ONCE |
+| 000012 | hmbl_pool_create | Humble Quest: Create pool | ONCE |
+| 000013 | hmbl_farm_stake | Humble Quest: Stake in farm | ONCE |
+| 000014 | hmbl_farm_claim | Humble Quest: Claim farm rewards | ONCE |
+| 000015 | hmbl_farm_create | Humble Quest: Create farm | ONCE |
 
 ## Contributing
 
