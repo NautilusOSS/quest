@@ -1,6 +1,6 @@
 # Nautilus Quests
 
-Nautilus NFT Marketplace quest system (https://quest.nautilus.sh)
+Nautilus quest system (https://quest.nautilus.sh)
 
 ## Table of Contents
 
