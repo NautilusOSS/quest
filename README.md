@@ -59,4 +59,4 @@ Contributions welcome
 
 ## License
 
-License here
+MIT License
