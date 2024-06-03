@@ -44,14 +44,14 @@ Here's an example table:
 
 | Quest | Name | Description | Guide | Frequency |
 |-----------------|-----------------|-----------------|-----------------|-----------------|
-| 000001 | connect_wallet | Wallet Quest: Connect Wallet (Account Connection) | LINK | ONCE |
+| 000001 | connect_wallet | Wallet Quest: Connect Wallet<br />Account Connection | LINK | ONCE |
 | 000002 | sale_list_once | Sale Quest: List NFT for Sale | LINK | ONCE |
 | 000003 | sale_buy_once | Sale Quest: Buy NFT for Sale | LINK | ONCE |
-| 000004 | swap_list_once | M-Swap Quest: List MechaSwap (Swap NFT) | LINK | ONCE |
-| 000005 | swap_execute_once | M-Swap Quest: Execute MechaSwap (Swap NFT) | LINK | ONCE |
-| 000006 | timed_sale_list_1minute | Timed Quest: List NFT 1 minute after mint on High Forge | LINK | ONCE |
-| 000007 | timed_sale_list_15minutes | Timed Quest: List NFT 15 minute after 1st mint on High Forge | LINK | ONCE |
-| 000008 | timed_sale_list_1hour | Timed Quest: List NFT 1 hour after mint on High Forge | LINK | ONCE |
+| 000004 | swap_list_once | M-Swap Quest: List MechaSwap<br />Swap NFT | LINK | ONCE |
+| 000005 | swap_execute_once | M-Swap Quest: Execute MechaSwap<br />Swap NFT | LINK | ONCE |
+| 000006 | timed_sale_list_1minute | Timed Quest: List NFT 1 minute after mint<br />on High Forge | LINK | ONCE |
+| 000007 | timed_sale_list_15minutes | Timed Quest: List NFT 15 minute after 1st mint<br />on High Forge | LINK | ONCE |
+| 000008 | timed_sale_list_1hour | Timed Quest: List NFT 1 hour after mint<br />on High Forge | LINK | ONCE |
 
 ## Contributing
 
