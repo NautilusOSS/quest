@@ -79,6 +79,11 @@ const validateAction = (req, res, next) => {
     return res.status(400).json({ error: "Action and data are required" });
   }
   switch (action) {
+    case "hbml_pool_swap":
+      const { poolId } = data;
+      if (isNaN(NUmber(poolId))) {
+        return res.status(400).json({ message: "Invalid pool id" });
+      }
     case "connect_wallet":
     case "sale_list_once":
     case "sale_buy_once":
@@ -87,7 +92,6 @@ const validateAction = (req, res, next) => {
     case "timed_sale_list_1minute":
     case "timed_sale_list_15minutes":
     case "timed_sale_list_1hour":
-    case "hbml_pool_swap":
     case "hmbl_token_create":
     case "hmbl_pool_create":
     case "hmbl_pool_add":
@@ -128,7 +132,8 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
   res.header("Response-Type", "application/json");
   const { action, data, contractId, tokenId } = req.body;
   try {
-    const [{ address }] = data.wallets;
+    const { wallets, poolId } = data;
+    const [{ address }] = wallets;
     const key = `${action}:${address}`;
     const info = await db.getInfo(key);
     switch (action) {
@@ -324,6 +329,9 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         const swapEvents =
           evts.find((el) => el.name === "e_swap_SwapEvent")?.events || [];
         if (swapEvents.length > 0) await db.setInfo(key, Date.now());
+      }
+      case "hbml_pool_swap": {
+        console.log({ poolId });
       }
       default:
         break; // impossible
