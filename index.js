@@ -85,8 +85,15 @@ const validateAction = (req, res, next) => {
     case "swap_list_once":
     case "swap_execute_once":
     case "timed_sale_list_1minute":
-    case "timed_sale_list_1hour":
     case "timed_sale_list_15minutes":
+    case "timed_sale_list_1hour":
+    case "hbml_pool_swap":
+    case "hmbl_token_create":
+    case "hmbl_pool_create":
+    case "hmbl_pool_add":
+    case "hmbl_farm_stake":
+    case "hmbl_farm_claim":
+    case "hmbl_farm_create":
     case "not-a-quest": {
       // check address validitiy
       const ADDRESS_REGEX = /[A-Z0-9]{58}/;
