@@ -79,6 +79,13 @@ const validateAction = (req, res, next) => {
     return res.status(400).json({ error: "Action and data are required" });
   }
   switch (action) {
+    case "hmbl_token_create": {
+      const { tokenId } = data;
+      if (isNaN(Number(tokenId))) {
+        return res.status(400).json({ message: "Invalid token id" });
+      }
+      break;
+    }
     case "hmbl_pool_add":
     case "hmbl_pool_swap":
       const { poolId } = data;
@@ -358,7 +365,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
       }
       case "hmbl_pool_swap": {
         if (!info) {
-          const { swap, CONTRACT, abi } = await import("ulujs");
+          const { swap } = await import("ulujs");
           const ci = new swap(poolId, algodClient, indexerClient, abi.swap);
           const evts = await ci.SwapEvents({
             minRound,
@@ -372,8 +379,8 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
       }
       case "hmbl_pool_add": {
         if (!info) {
-          const { swap, CONTRACT, abi } = await import("ulujs");
-          const ci = new swap(poolId, algodClient, indexerClient, abi.swap);
+          const { swap } = await import("ulujs");
+          const ci = new swap(poolId, algodClient, indexerClient);
           const evts = await ci.DepositEvents({
             minRound,
             address,
@@ -382,6 +389,25 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
           });
 	  console.log(evts);
           if (evts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
+      case "hmbl_token_create": {
+        if (!info) {
+          const { swap } = await import("ulujs");
+          const ci = new swap(tokenId, algodClient, indexerClient);
+          const evts = await ci.arc200_Transfer({
+            minRound,
+            address,
+            sender: address,
+            limit: 10,
+          });
+	  const fEvts = evts.filter((evt) => {
+	    const addrFrom = evt[3]
+	    const addrTo = evt[4]
+	    return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === address
+	  })
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
         }
         break;
       }
