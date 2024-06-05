@@ -30,12 +30,12 @@ const indexerClient = new algosdk.Indexer(
   process.env.INDEXER_PORT || ""
 );
 
-const dbPath = DB_PATH;
+const dbPath = DB_PATH || "./db.sqlite"
 
 const db = new Database(dbPath);
 
 const app = express();
-const port = PORT;
+const port = PORT || "3001";
 
 app.use(cors());
 //app.use(bodyParser.urlencoded({ extended: true }))
@@ -79,9 +79,9 @@ const validateAction = (req, res, next) => {
     return res.status(400).json({ error: "Action and data are required" });
   }
   switch (action) {
-    case "hbml_pool_swap":
+    case "hmbl_pool_swap":
       const { poolId } = data;
-      if (isNaN(NUmber(poolId))) {
+      if (isNaN(Number(poolId))) {
         return res.status(400).json({ message: "Invalid pool id" });
       }
     case "connect_wallet":
@@ -130,11 +130,12 @@ const ctcInfoMp212 = 40433943;
 app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Response-Type", "application/json");
-  const { action, data, contractId, tokenId } = req.body;
+  const { action, data } = req.body;
   try {
-    const { wallets, poolId } = data;
+    const { wallets, contractId, tokenId, poolId } = data;
     const [{ address }] = wallets;
     const key = `${action}:${address}`;
+    console.log(key);
     const info = await db.getInfo(key);
     switch (action) {
       case "connect_wallet": {
@@ -297,6 +298,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         const listEvents =
           evts.find((el) => el.name === "e_swap_ListEvent")?.events || [];
         if (listEvents.length > 0) await db.setInfo(key, Date.now());
+	break;
       }
       case "swap_execute_once": {
         const spec = {
@@ -329,9 +331,15 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         const swapEvents =
           evts.find((el) => el.name === "e_swap_SwapEvent")?.events || [];
         if (swapEvents.length > 0) await db.setInfo(key, Date.now());
+	break;
       }
-      case "hbml_pool_swap": {
-        console.log({ poolId });
+      case "hmbl_pool_swap": {
+	const { CONTRACT, abi } = await import("ulujs");
+	const ci = new CONTRACT(poolId, algodClient, indexerClient, abi.swap);
+	console.log(ci);
+	const evts = await ci.getEvents();
+	console.log(evts);
+	break;
       }
       default:
         break; // impossible
