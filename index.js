@@ -256,6 +256,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         break;
       }
       case "swap_list_once": {
+	if(!info) {
         const spec = {
           name: "",
           desc: "",
@@ -298,9 +299,11 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         const listEvents =
           evts.find((el) => el.name === "e_swap_ListEvent")?.events || [];
         if (listEvents.length > 0) await db.setInfo(key, Date.now());
+	}
 	break;
       }
       case "swap_execute_once": {
+	if(!info) {
         const spec = {
           name: "",
           desc: "",
@@ -331,14 +334,16 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         const swapEvents =
           evts.find((el) => el.name === "e_swap_SwapEvent")?.events || [];
         if (swapEvents.length > 0) await db.setInfo(key, Date.now());
+	}
 	break;
       }
       case "hmbl_pool_swap": {
-	const { CONTRACT, abi } = await import("ulujs");
-	const ci = new CONTRACT(poolId, algodClient, indexerClient, abi.swap);
-	console.log(ci);
-	const evts = await ci.getEvents();
-	console.log(evts);
+	if(!info) {
+	const { swap, CONTRACT, abi } = await import("ulujs");
+	const ci = new swap(poolId, algodClient, indexerClient, abi.swap);
+	const evts = await ci.SwapEvents({ minRound, address, sender: address, limit: 10 });
+	if(evts.length > 0) await db.setInfo(key, Date.now());
+	}
 	break;
       }
       default:
