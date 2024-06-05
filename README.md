@@ -52,7 +52,7 @@ Here's an example table:
 | 000006 | timed_sale_list_1minute | Timed Quest: List NFT 1 minute after mint<br />on High Forge | ONCE |
 | 000007 | timed_sale_list_15minutes | Timed Quest: List NFT 15 minute after 1st mint<br />on High Forge | ONCE |
 | 000008 | timed_sale_list_1hour | Timed Quest: List NFT 1 hour after mint<br />on High Forge | ONCE |
-| 000009 | hbml_pool_swap | Humble Quest: Make your first swap | ONCE |
+| 000009 | hmbl_pool_swap | Humble Quest: Make your first swap | ONCE |
 | 000010 | hmbl_pool_add | Humble Quest: Add liquidity | ONCE |
 | 000011 | hmbl_token_create | Humble Quest: Create token | ONCE |
 | 000012 | hmbl_pool_create | Humble Quest: Create pool | ONCE |
