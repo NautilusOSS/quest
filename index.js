@@ -321,15 +321,19 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
       case "faucet_drip_once": {
         if (!info) {
           const { arc200 } = await import("ulujs");
-          const ci = new arc200(contractId, algodClient, indexerClient);
+          const ci = new arc200(data.contractId, algodClient, indexerClient);
           const faucetAddress =
             "2CMESXKIAZ5HLRKGGC3RBS7XYDXK5WPH3LRN4J4ICUHNTJQIYJQPH6KX3M";
-          const evts = ci.arc200_Transfer({
+          const evts = await ci.arc200_Transfer({
             minRound,
             address: faucetAddress,
             sender: faucetAddress,
           });
-          console.log(evts);
+          const fEvts = evts.filter((evt) => {
+            const addrTo = evt[4];
+            return addrTo === address;
+          });
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
         }
         break;
       }
