@@ -79,6 +79,7 @@ const validateAction = (req, res, next) => {
     return res.status(400).json({ error: "Action and data are required" });
   }
   switch (action) {
+    case "hmbl_pool_add":
     case "hmbl_pool_swap":
       const { poolId } = data;
       if (isNaN(Number(poolId))) {
@@ -365,6 +366,21 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
             sender: address,
             limit: 10,
           });
+          if (evts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
+      case "hmbl_pool_add": {
+        if (!info) {
+          const { swap, CONTRACT, abi } = await import("ulujs");
+          const ci = new swap(poolId, algodClient, indexerClient, abi.swap);
+          const evts = await ci.DepositEvents({
+            minRound,
+            address,
+            sender: address,
+            limit: 10,
+          });
+	  console.log(evts);
           if (evts.length > 0) await db.setInfo(key, Date.now());
         }
         break;
