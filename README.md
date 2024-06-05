@@ -52,6 +52,7 @@ Here's an example table:
 | 000006 | timed_sale_list_1minute | Timed Quest: List NFT 1 minute after mint<br />on High Forge | ONCE |
 | 000007 | timed_sale_list_15minutes | Timed Quest: List NFT 15 minute after 1st mint<br />on High Forge | ONCE |
 | 000008 | timed_sale_list_1hour | Timed Quest: List NFT 1 hour after mint<br />on High Forge | ONCE |
+| 000016 | faucet_drip_once | Faucet Quest: Drip 1000 VIA from faucet | ONCE |
 
 ## Contributing
 
