@@ -115,6 +115,7 @@ app.get("/quest", validateKey, async (req, res) => {
 
 const minRound = 6534432; // 1 May
 const ctcInfoMp212 = 40433943;
+const ctcInfoMp = 29117863;
 
 app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -123,6 +124,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
   try {
     const [{ address }] = data.wallets;
     const key = `${action}:${address}`;
+    console.log(key);
     const info = await db.getInfo(key);
     switch (action) {
       case "connect_wallet": {
@@ -151,27 +153,36 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
       }
       case "timed_sale_list_1minute": {
         if (!info) {
-          const {
-            data: { transfers },
-          } = await axios.get(
-            `https://arc72-idx.nftnavigator.xyz/nft-indexer/v1/transfers?limit=1&contractId=${contractId}&tokenId=${tokenId}`
-          ); // transfer from zero address
-          if (transfers.length === 0) {
-            console.log("not minted");
-            break;
-          }
-          const [{ round: mintRound, timestamp: mintTimestamp }] = transfers;
-          const getListingURI = `https://arc72-idx.nftnavigator.xyz/nft-indexer/v1/mp/listings?collectionId=${contractId}&tokenId=${tokenId}&seller=${address}&min-round=${Math.max(
-            minRound,
-            mintRound
-          )}`;
-          const {
-            data: { listings },
-          } = await axios.get(getListingURI);
-          if (listings.length === 0) {
-            break;
-          }
-          const [{ createTimestamp: listTimestamp }] = listings;
+	  const status = await algodClient.status().do();
+	  const { mp, arc72 } = await import("ulujs");
+	 
+	  const ci = new mp(ctcInfoMp, algodClient, indexerClient);
+	  const evts = await ci.ListEvent({
+	    minRound: Math.max(0, (status["last-round"]||0) - 1000),
+	    address,
+	    sender: address
+	  });
+	  const fEvts = evts.filter((evt) => {
+	    const addr = evt[6];
+	    return addr === address;
+	  })
+	  if(fEvts.length < 1) break;
+	  const [fEvt] = fEvts;
+	  const listTimestamp = fEvt[2];
+
+          const ciARC72 = new arc72(contractId, algodClient, indexerClient);
+	  const evts2 = await ciARC72.arc72_Transfer({
+	    minRound: Math.max(0, (status["last-round"]||0) - 100000),
+	  });
+	  const fEvts2 = evts2.filter((evt) => {
+	    const addrFrom = evt[3];
+	    const addrTo = evt[4]
+	    return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === address
+	  });
+	  if(fEvts2.length <1) break;
+	  const [fEvt2] = fEvts2;
+	  const mintTimestamp = fEvt2[2];
+
           const threshold = 60;
           const elapsedTime = Math.abs(listTimestamp - mintTimestamp);
           if (elapsedTime <= threshold) {
