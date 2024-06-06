@@ -140,6 +140,7 @@ app.get("/quest", validateKey, async (req, res) => {
 
 const minRound = 6534432; // 1 May
 const ctcInfoMp212 = 40433943;
+const ctcInfoStakr = 36898212;
 
 app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -444,6 +445,28 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
               addrFrom ===
                 "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" &&
               addrTo === algosdk.getApplicationAddress(poolId)
+            );
+          });
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
+      case "hmbl_farm_stake": {
+        if (!info) {
+          const { abi, CONTRACT } = await import("ulujs");
+          const ci = new CONTRACT(contractId, algodClient, indexerClient, abi.stakr200);
+          const evts = (
+            await ci.Stake({
+              minRound: Math.max(0, (await getLastRound()) - 1000),
+              address,
+              sender: address,
+              limit: 1,
+            })
+          ).slice(0, 1);
+          const fEvts = evts.filter((evt) => {
+            const addr = evt[4];
+            return (
+              addr === address
             );
           });
           if (fEvts.length > 0) await db.setInfo(key, Date.now());
