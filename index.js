@@ -91,6 +91,7 @@ const validateAction = (req, res, next) => {
       }
       break;
     }
+    case "hmbl_pool_create":
     case "hmbl_pool_add":
     case "hmbl_pool_swap":
       const { poolId } = data;
@@ -413,6 +414,26 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
 	    const addrTo = evt[4]
 	    return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === address
 	  })
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
+    case "hmbl_pool_create": {
+        if (!info) {
+          const { swap } = await import("ulujs");
+          const ci = new swap(poolId, algodClient, indexerClient);
+          const evts = (await ci.arc200_Transfer({
+            minRound: Math.max(0, (await getLastRound()) - 1000),
+            address,
+            sender: address,
+            limit: 1,
+          })).slice(0,1);
+          console.log(evts)
+          const fEvts = evts.filter((evt) => {
+            const addrFrom = evt[3]
+            const addrTo = evt[4]
+            return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === algosdk.getApplicationAddress(poolId);
+          })
           if (fEvts.length > 0) await db.setInfo(key, Date.now());
         }
         break;
