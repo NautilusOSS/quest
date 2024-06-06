@@ -27,7 +27,7 @@ const algodClient = new algosdk.Algodv2(
 const getLastRound = async () => {
   const status = await algodClient.status().do();
   return status["last-round"] || 0;
-}
+};
 
 const indexerClient = new algosdk.Indexer(
   process.env.INDEXER_TOKEN || "",
@@ -374,7 +374,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
           const { swap } = await import("ulujs");
           const ci = new swap(poolId, algodClient, indexerClient, abi.swap);
           const evts = await ci.SwapEvents({
-	    minRound: Math.max(0, (await getLastRound()) - 1000),
+            minRound: Math.max(0, (await getLastRound()) - 1000),
             address,
             sender: address,
             limit: 10,
@@ -388,12 +388,12 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
           const { swap } = await import("ulujs");
           const ci = new swap(poolId, algodClient, indexerClient);
           const evts = await ci.DepositEvents({
-	    minRound: Math.max(0, (await getLastRound()) - 1000),
+            minRound: Math.max(0, (await getLastRound()) - 1000),
             address,
             sender: address,
             limit: 10,
           });
-	  console.log(evts);
+          console.log(evts);
           if (evts.length > 0) await db.setInfo(key, Date.now());
         }
         break;
@@ -402,38 +402,50 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         if (!info) {
           const { swap } = await import("ulujs");
           const ci = new swap(tokenId, algodClient, indexerClient);
-          const evts = (await ci.arc200_Transfer({
-	    minRound: Math.max(0, (await getLastRound()) - 1000),
-            address,
-            sender: address,
-            limit: 1,
-          })).slice(0,1);
-	  console.log(evts)
-	  const fEvts = evts.filter((evt) => {
-	    const addrFrom = evt[3]
-	    const addrTo = evt[4]
-	    return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === address
-	  })
+          const evts = (
+            await ci.arc200_Transfer({
+              minRound: Math.max(0, (await getLastRound()) - 1000),
+              address,
+              sender: address,
+              limit: 1,
+            })
+          ).slice(0, 1);
+          console.log(evts);
+          const fEvts = evts.filter((evt) => {
+            const addrFrom = evt[3];
+            const addrTo = evt[4];
+            return (
+              addrFrom ===
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" &&
+              addrTo === address
+            );
+          });
           if (fEvts.length > 0) await db.setInfo(key, Date.now());
         }
         break;
       }
-    case "hmbl_pool_create": {
+      case "hmbl_pool_create": {
         if (!info) {
           const { swap } = await import("ulujs");
           const ci = new swap(poolId, algodClient, indexerClient);
-          const evts = (await ci.arc200_Transfer({
-            minRound: Math.max(0, (await getLastRound()) - 1000),
-            address,
-            sender: address,
-            limit: 1,
-          })).slice(0,1);
-          console.log(evts)
+          const evts = (
+            await ci.arc200_Transfer({
+              minRound: Math.max(0, (await getLastRound()) - 1000),
+              address,
+              sender: address,
+              limit: 1,
+            })
+          ).slice(0, 1);
+          console.log(evts);
           const fEvts = evts.filter((evt) => {
-            const addrFrom = evt[3]
-            const addrTo = evt[4]
-            return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === algosdk.getApplicationAddress(poolId);
-          })
+            const addrFrom = evt[3];
+            const addrTo = evt[4];
+            return (
+              addrFrom ===
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" &&
+              addrTo === algosdk.getApplicationAddress(poolId)
+            );
+          });
           if (fEvts.length > 0) await db.setInfo(key, Date.now());
         }
         break;
