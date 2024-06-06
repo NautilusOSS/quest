@@ -473,6 +473,28 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         }
         break;
       }
+      case "hmbl_farm_claim": {
+        if (!info) {
+          const { abi, CONTRACT } = await import("ulujs");
+          const ci = new CONTRACT(contractId, algodClient, indexerClient, abi.stakr200);
+          const evts = (
+            await ci.Harvest({
+              minRound: Math.max(0, (await getLastRound()) - 1000),
+              address,
+              sender: address,
+              limit: 1,
+            })
+          ).slice(0, 1);
+          const fEvts = evts.filter((evt) => {
+            const addr = evt[4];
+            return (
+              addr === address
+            );
+          });
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
       default:
         break; // impossible
     }
