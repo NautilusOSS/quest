@@ -167,12 +167,12 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
 	    return addr === address;
 	  })
 	  if(fEvts.length < 1) break;
-	  const [fEvt] = fEvts;
+	  const fEvt = fEvts.pop();
 	  const listTimestamp = fEvt[2];
 
-          const ciARC72 = new arc72(contractId, algodClient, indexerClient);
+          const ciARC72 = new arc72(data.contractId, algodClient, indexerClient);
 	  const evts2 = await ciARC72.arc72_Transfer({
-	    minRound: Math.max(0, (status["last-round"]||0) - 100000),
+	    minRound: Math.max(0, (status["last-round"]||0) - 1000),
 	  });
 	  const fEvts2 = evts2.filter((evt) => {
 	    const addrFrom = evt[3];
@@ -180,10 +180,10 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
 	    return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === address
 	  });
 	  if(fEvts2.length <1) break;
-	  const [fEvt2] = fEvts2;
+	  const fEvt2 = fEvts2.pop();
 	  const mintTimestamp = fEvt2[2];
 
-          const threshold = 60;
+          const threshold = 60; // !!
           const elapsedTime = Math.abs(listTimestamp - mintTimestamp);
           if (elapsedTime <= threshold) {
             await db.setInfo(key, Date.now());
@@ -193,28 +193,37 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
       }
       case "timed_sale_list_15minutes": {
         if (!info) {
-          const {
-            data: { transfers },
-          } = await axios.get(
-            `https://arc72-idx.nftnavigator.xyz/nft-indexer/v1/transfers?limit=1&contractId=${contractId}&tokenId=1`
-          ); // transfer from zero address from first token
-          if (transfers.length === 0) {
-            console.log("not minted");
-            break;
-          }
-          const [{ round: mintRound, timestamp: mintTimestamp }] = transfers;
-          const getListingURI = `https://arc72-idx.nftnavigator.xyz/nft-indexer/v1/mp/listings?collectionId=${contractId}&tokenId=${tokenId}&seller=${address}&min-round=${Math.max(
-            minRound,
-            mintRound
-          )}`;
-          const {
-            data: { listings },
-          } = await axios.get(getListingURI);
-          if (listings.length === 0) {
-            break;
-          }
-          const [{ createTimestamp: listTimestamp }] = listings;
-          const threshold = 60 * 15;
+          const status = await algodClient.status().do();
+          const { mp, arc72 } = await import("ulujs");
+
+          const ci = new mp(ctcInfoMp, algodClient, indexerClient);
+          const evts = await ci.ListEvent({
+            minRound: Math.max(0, (status["last-round"]||0) - 1000),
+            address,
+            sender: address
+          });
+          const fEvts = evts.filter((evt) => {
+            const addr = evt[6];
+            return addr === address;
+          })
+          if(fEvts.length < 1) break;
+          const fEvt = fEvts.pop();
+          const listTimestamp = fEvt[2];
+
+          const ciARC72 = new arc72(data.contractId, algodClient, indexerClient);
+          const evts2 = await ciARC72.arc72_Transfer({
+            minRound: Math.max(0, (status["last-round"]||0) - 1000),
+          });
+          const fEvts2 = evts2.filter((evt) => {
+            const addrFrom = evt[3];
+            const addrTo = evt[4]
+            return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === address
+          });
+          if(fEvts2.length <1) break;
+          const fEvt2 = fEvts2.pop();
+          const mintTimestamp = fEvt2[2];
+
+          const threshold = 60 * 15; // !!
           const elapsedTime = Math.abs(listTimestamp - mintTimestamp);
           if (elapsedTime <= threshold) {
             await db.setInfo(key, Date.now());
@@ -223,29 +232,38 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         break;
       }
       case "timed_sale_list_1hour": {
-        if (!info) {
-          const {
-            data: { transfers },
-          } = await axios.get(
-            `https://arc72-idx.nftnavigator.xyz/nft-indexer/v1/transfers?limit=1&contractId=${contractId}&tokenId=${tokenId}`
-          ); // transfer from zero address
-          if (transfers.length === 0) {
-            console.log("not minted");
-            break;
-          }
-          const [{ round: mintRound, timestamp: mintTimestamp }] = transfers;
-          const getListingURI = `https://arc72-idx.nftnavigator.xyz/nft-indexer/v1/mp/listings?collectionId=${contractId}&tokenId=${tokenId}&seller=${address}&min-round=${Math.max(
-            minRound,
-            mintRound
-          )}`;
-          const {
-            data: { listings },
-          } = await axios.get(getListingURI);
-          if (listings.length === 0) {
-            break;
-          }
-          const [{ createTimestamp: listTimestamp }] = listings;
-          const threshold = 60 * 60;
+	  if (!info) {
+          const status = await algodClient.status().do();
+          const { mp, arc72 } = await import("ulujs");
+
+          const ci = new mp(ctcInfoMp, algodClient, indexerClient);
+          const evts = await ci.ListEvent({
+            minRound: Math.max(0, (status["last-round"]||0) - 1000),
+            address,
+            sender: address
+          });
+          const fEvts = evts.filter((evt) => {
+            const addr = evt[6];
+            return addr === address;
+          })
+          if(fEvts.length < 1) break;
+          const fEvt = fEvts.pop();
+          const listTimestamp = fEvt[2];
+
+          const ciARC72 = new arc72(data.contractId, algodClient, indexerClient);
+          const evts2 = await ciARC72.arc72_Transfer({
+            minRound: Math.max(0, (status["last-round"]||0) - 1000),
+          });
+          const fEvts2 = evts2.filter((evt) => {
+            const addrFrom = evt[3];
+            const addrTo = evt[4]
+            return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === address
+          });
+          if(fEvts2.length <1) break;
+          const fEvt2 = fEvts2.pop();
+          const mintTimestamp = fEvt2[2];
+
+          const threshold = 60 * 60; // !!
           const elapsedTime = Math.abs(listTimestamp - mintTimestamp);
           if (elapsedTime <= threshold) {
             await db.setInfo(key, Date.now());
