@@ -373,7 +373,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
       case "hmbl_pool_swap": {
         if (!info) {
           const { swap } = await import("ulujs");
-          const ci = new swap(poolId, algodClient, indexerClient, abi.swap);
+          const ci = new swap(poolId, algodClient, indexerClient);
           const evts = await ci.SwapEvents({
             minRound: Math.max(0, (await getLastRound()) - 1000),
             address,
