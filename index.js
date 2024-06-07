@@ -153,35 +153,43 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
       }
       case "timed_sale_list_1minute": {
         if (!info) {
-	  const status = await algodClient.status().do();
-	  const { mp, arc72 } = await import("ulujs");
-	 
-	  const ci = new mp(ctcInfoMp, algodClient, indexerClient);
-	  const evts = await ci.ListEvent({
-	    minRound: Math.max(0, (status["last-round"]||0) - 1000),
-	    address,
-	    sender: address
-	  });
-	  const fEvts = evts.filter((evt) => {
-	    const addr = evt[6];
-	    return addr === address;
-	  })
-	  if(fEvts.length < 1) break;
-	  const fEvt = fEvts.pop();
-	  const listTimestamp = fEvt[2];
+          const status = await algodClient.status().do();
+          const { mp, arc72 } = await import("ulujs");
 
-          const ciARC72 = new arc72(data.contractId, algodClient, indexerClient);
-	  const evts2 = await ciARC72.arc72_Transfer({
-	    minRound: Math.max(0, (status["last-round"]||0) - 1000),
-	  });
-	  const fEvts2 = evts2.filter((evt) => {
-	    const addrFrom = evt[3];
-	    const addrTo = evt[4]
-	    return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === address
-	  });
-	  if(fEvts2.length <1) break;
-	  const fEvt2 = fEvts2.pop();
-	  const mintTimestamp = fEvt2[2];
+          const ci = new mp(ctcInfoMp, algodClient, indexerClient);
+          const evts = await ci.ListEvent({
+            minRound: Math.max(0, (status["last-round"] || 0) - 1000),
+            address,
+            sender: address,
+          });
+          const fEvts = evts.filter((evt) => {
+            const addr = evt[6];
+            return addr === address;
+          });
+          if (fEvts.length < 1) break;
+          const fEvt = fEvts.pop();
+          const listTimestamp = fEvt[2];
+
+          const ciARC72 = new arc72(
+            data.contractId,
+            algodClient,
+            indexerClient
+          );
+          const evts2 = await ciARC72.arc72_Transfer({
+            minRound: Math.max(0, (status["last-round"] || 0) - 1000),
+          });
+          const fEvts2 = evts2.filter((evt) => {
+            const addrFrom = evt[3];
+            const addrTo = evt[4];
+            return (
+              addrFrom ===
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" &&
+              addrTo === address
+            );
+          });
+          if (fEvts2.length < 1) break;
+          const fEvt2 = fEvts2.pop();
+          const mintTimestamp = fEvt2[2];
 
           const threshold = 60; // !!
           const elapsedTime = Math.abs(listTimestamp - mintTimestamp);
@@ -198,28 +206,36 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
 
           const ci = new mp(ctcInfoMp, algodClient, indexerClient);
           const evts = await ci.ListEvent({
-            minRound: Math.max(0, (status["last-round"]||0) - 1000),
+            minRound: Math.max(0, (status["last-round"] || 0) - 1000),
             address,
-            sender: address
+            sender: address,
           });
           const fEvts = evts.filter((evt) => {
             const addr = evt[6];
             return addr === address;
-          })
-          if(fEvts.length < 1) break;
+          });
+          if (fEvts.length < 1) break;
           const fEvt = fEvts.pop();
           const listTimestamp = fEvt[2];
 
-          const ciARC72 = new arc72(data.contractId, algodClient, indexerClient);
+          const ciARC72 = new arc72(
+            data.contractId,
+            algodClient,
+            indexerClient
+          );
           const evts2 = await ciARC72.arc72_Transfer({
-            minRound: Math.max(0, (status["last-round"]||0) - 1000),
+            minRound: Math.max(0, (status["last-round"] || 0) - 1000),
           });
           const fEvts2 = evts2.filter((evt) => {
             const addrFrom = evt[3];
-            const addrTo = evt[4]
-            return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === address
+            const addrTo = evt[4];
+            return (
+              addrFrom ===
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" &&
+              addrTo === address
+            );
           });
-          if(fEvts2.length <1) break;
+          if (fEvts2.length < 1) break;
           const fEvt2 = fEvts2.pop();
           const mintTimestamp = fEvt2[2];
 
@@ -232,34 +248,42 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         break;
       }
       case "timed_sale_list_1hour": {
-	  if (!info) {
+        if (!info) {
           const status = await algodClient.status().do();
           const { mp, arc72 } = await import("ulujs");
 
           const ci = new mp(ctcInfoMp, algodClient, indexerClient);
           const evts = await ci.ListEvent({
-            minRound: Math.max(0, (status["last-round"]||0) - 1000),
+            minRound: Math.max(0, (status["last-round"] || 0) - 1000),
             address,
-            sender: address
+            sender: address,
           });
           const fEvts = evts.filter((evt) => {
             const addr = evt[6];
             return addr === address;
-          })
-          if(fEvts.length < 1) break;
+          });
+          if (fEvts.length < 1) break;
           const fEvt = fEvts.pop();
           const listTimestamp = fEvt[2];
 
-          const ciARC72 = new arc72(data.contractId, algodClient, indexerClient);
+          const ciARC72 = new arc72(
+            data.contractId,
+            algodClient,
+            indexerClient
+          );
           const evts2 = await ciARC72.arc72_Transfer({
-            minRound: Math.max(0, (status["last-round"]||0) - 1000),
+            minRound: Math.max(0, (status["last-round"] || 0) - 1000),
           });
           const fEvts2 = evts2.filter((evt) => {
             const addrFrom = evt[3];
-            const addrTo = evt[4]
-            return addrFrom === "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" && addrTo === address
+            const addrTo = evt[4];
+            return (
+              addrFrom ===
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" &&
+              addrTo === address
+            );
           });
-          if(fEvts2.length <1) break;
+          if (fEvts2.length < 1) break;
           const fEvt2 = fEvts2.pop();
           const mintTimestamp = fEvt2[2];
 
