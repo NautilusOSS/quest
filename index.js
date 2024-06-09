@@ -24,18 +24,23 @@ const algodClient = new algosdk.Algodv2(
   process.env.ALGOD_PORT || ""
 );
 
+const getLastRound = async () => {
+  const status = await algodClient.status().do();
+  return status["last-round"] || 0;
+};
+
 const indexerClient = new algosdk.Indexer(
   process.env.INDEXER_TOKEN || "",
   process.env.INDEXER_SERVER || ALGO_INDEXER_SERVER,
   process.env.INDEXER_PORT || ""
 );
 
-const dbPath = DB_PATH;
+const dbPath = DB_PATH || "./db.sqlite";
 
 const db = new Database(dbPath);
 
 const app = express();
-const port = PORT;
+const port = PORT || "3001";
 
 app.use(cors());
 //app.use(bodyParser.urlencoded({ extended: true }))
@@ -79,7 +84,22 @@ const validateAction = (req, res, next) => {
     return res.status(400).json({ error: "Action and data are required" });
   }
   switch (action) {
+    case "hmbl_token_create": {
+      const { tokenId } = data;
+      if (isNaN(Number(tokenId))) {
+        return res.status(400).json({ message: "Invalid token id" });
+      }
+      break;
+    }
+    case "hmbl_pool_create":
+    case "hmbl_pool_add":
+    case "hmbl_pool_swap":
+      const { poolId } = data;
+      if (isNaN(Number(poolId))) {
+        return res.status(400).json({ message: "Invalid pool id" });
+      }
     case "connect_wallet":
+    case "sale_list_once":
     case "sale_buy_once":
     case "sale_list_once":
     case "timed_sale_list_1minute":
@@ -87,7 +107,19 @@ const validateAction = (req, res, next) => {
     case "timed_sale_list_15minutes":
     case "swap_execute_once":
     case "faucet_drip_once":
-    case "swap_list_once": {
+    case "swap_list_once": 
+    case "swap_list_once":
+    case "swap_execute_once":
+    case "timed_sale_list_1minute":
+    case "timed_sale_list_15minutes":
+    case "timed_sale_list_1hour":
+    case "hmbl_token_create":
+    case "hmbl_pool_create":
+    case "hmbl_pool_add":
+    case "hmbl_farm_stake":
+    case "hmbl_farm_claim":
+    case "hmbl_farm_create":
+    case "not-a-quest": {
       // check address validitiy
       const ADDRESS_REGEX = /[A-Z0-9]{58}/;
       const [{ address }] = data.wallets;
@@ -115,14 +147,16 @@ app.get("/quest", validateKey, async (req, res) => {
 
 const minRound = 6534432; // 1 May
 const ctcInfoMp212 = 40433943;
+const ctcInfoStakr = 36898212;
 const ctcInfoMp = 29117863;
 
 app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Response-Type", "application/json");
-  const { action, data, contractId, tokenId } = req.body;
+  const { action, data } = req.body;
   try {
-    const [{ address }] = data.wallets;
+    const { wallets, contractId, tokenId, poolId } = data;
+    const [{ address }] = wallets;
     const key = `${action}:${address}`;
     console.log(key);
     const info = await db.getInfo(key);
@@ -153,6 +187,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
       }
       case "timed_sale_list_1minute": {
         if (!info) {
+
           const status = await algodClient.status().do();
           const { mp, arc72 } = await import("ulujs");
 
@@ -338,7 +373,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         const listEvents =
           evts.find((el) => el.name === "e_swap_ListEvent")?.events || [];
         if (listEvents.length > 0) await db.setInfo(key, Date.now());
-      }
+      }        
       case "swap_execute_once": {
         const spec = {
           name: "",
@@ -388,6 +423,148 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
           });
           if (fEvts.length > 0) await db.setInfo(key, Date.now());
         }
+      case "hmbl_pool_swap": {
+        if (!info) {
+          const { swap } = await import("ulujs");
+          const ci = new swap(poolId, algodClient, indexerClient);
+          const evts = await ci.SwapEvents({
+            minRound: Math.max(0, (await getLastRound()) - 1000),
+            address,
+            sender: address,
+            limit: 10,
+          });
+          if (evts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
+      case "hmbl_pool_add": {
+        if (!info) {
+          const { swap } = await import("ulujs");
+          const ci = new swap(poolId, algodClient, indexerClient);
+          const evts = await ci.DepositEvents({
+            minRound: Math.max(0, (await getLastRound()) - 1000),
+            address,
+            sender: address,
+            limit: 10,
+          });
+          console.log(evts);
+          if (evts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
+      case "hmbl_token_create": {
+        if (!info) {
+          const { swap } = await import("ulujs");
+          const ci = new swap(tokenId, algodClient, indexerClient);
+          const evts = (
+            await ci.arc200_Transfer({
+              minRound: Math.max(0, (await getLastRound()) - 1000),
+              address,
+              sender: address,
+              limit: 1,
+            })
+          ).slice(0, 1);
+          console.log(evts);
+          const fEvts = evts.filter((evt) => {
+            const addrFrom = evt[3];
+            const addrTo = evt[4];
+            return (
+              addrFrom ===
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" &&
+              addrTo === address
+            );
+          });
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
+      case "hmbl_pool_create": {
+        if (!info) {
+          const { swap } = await import("ulujs");
+          const ci = new swap(poolId, algodClient, indexerClient);
+          const evts = (
+            await ci.arc200_Transfer({
+              minRound: Math.max(0, (await getLastRound()) - 1000),
+              address,
+              sender: address,
+              limit: 1,
+            })
+          ).slice(0, 1);
+          console.log(evts);
+          const fEvts = evts.filter((evt) => {
+            const addrFrom = evt[3];
+            const addrTo = evt[4];
+            return (
+              addrFrom ===
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ" &&
+              addrTo === algosdk.getApplicationAddress(poolId)
+            );
+          });
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
+      case "hmbl_farm_stake": {
+        if (!info) {
+          const { abi, CONTRACT } = await import("ulujs");
+          const ci = new CONTRACT(contractId, algodClient, indexerClient, abi.stakr200);
+          const evts = (
+            await ci.Stake({
+              minRound: Math.max(0, (await getLastRound()) - 1000),
+              address,
+              sender: address,
+              limit: 1,
+            })
+          ).slice(0, 1);
+          const fEvts = evts.filter((evt) => {
+            const addr = evt[4];
+            return (
+              addr === address
+            );
+          });
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
+      case "hmbl_farm_claim": {
+        if (!info) {
+          const { abi, CONTRACT } = await import("ulujs");
+          const ci = new CONTRACT(contractId, algodClient, indexerClient, abi.stakr200);
+          const evts = (
+            await ci.Harvest({
+              minRound: Math.max(0, (await getLastRound()) - 1000),
+              address,
+              sender: address,
+              limit: 1,
+            })
+          ).slice(0, 1);
+          const fEvts = evts.filter((evt) => {
+            const addr = evt[4];
+            return (
+              addr === address
+            );
+          });
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
+        }
+        break;
+      }
+      case "hmbl_farm_create": {
+        if (!info) {
+          const { abi, CONTRACT } = await import("ulujs");
+          const ci = new CONTRACT(contractId, algodClient, indexerClient, abi.stakr200);
+          const evts = (
+            await ci.Pool({
+              minRound: Math.max(0, (await getLastRound()) - 1000),
+              address,
+              sender: address,
+              limit: 1,
+            })
+          ).slice(0, 1);
+          const fEvts = evts.filter((evt) => {
+            const addr = evt[4];
+            return (
+              addr === address
+            );
         break;
       }
       default:
