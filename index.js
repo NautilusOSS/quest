@@ -107,7 +107,7 @@ const validateAction = (req, res, next) => {
     case "timed_sale_list_15minutes":
     case "swap_execute_once":
     case "faucet_drip_once":
-    case "swap_list_once": 
+    case "swap_list_once":
     case "swap_list_once":
     case "swap_execute_once":
     case "timed_sale_list_1minute":
@@ -185,9 +185,88 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         }
         break;
       }
+      case "swap_list_once": {
+        // 000004
+        const spec = {
+          name: "",
+          desc: "",
+          methods: [],
+          events: [
+            {
+              name: "e_swap_ListEvent",
+              args: [
+                {
+                  type: "uint256",
+                  name: "listingId",
+                },
+                {
+                  type: "uint64",
+                  name: "contractId",
+                },
+                {
+                  type: "uint256",
+                  name: "tokenId",
+                },
+                {
+                  type: "uint64",
+                  name: "contractId2",
+                },
+                {
+                  type: "uint256",
+                  name: "tokenId2",
+                },
+                {
+                  type: "uint64",
+                  name: "endTime",
+                },
+              ],
+            },
+          ],
+        };
+        const { CONTRACT } = await import("ulujs");
+        const ci = new CONTRACT(ctcInfoMp212, algodClient, indexerClient, spec);
+        const evts = await ci.getEvents({ minRound, address, sender: address });
+        const listEvents =
+          evts.find((el) => el.name === "e_swap_ListEvent")?.events || [];
+        if (listEvents.length > 0) await db.setInfo(key, Date.now());
+      }
+      case "swap_execute_once": {
+        // 000005:
+        const spec = {
+          name: "",
+          desc: "",
+          methods: [],
+          events: [
+            {
+              name: "e_swap_SwapEvent",
+              args: [
+                {
+                  type: "uint256",
+                  name: "listingId",
+                },
+                {
+                  type: "address",
+                  name: "holder1",
+                },
+                {
+                  type: "address",
+                  name: "holder2",
+                },
+              ],
+            },
+          ],
+        };
+        const { CONTRACT } = await import("ulujs");
+        const ci = new CONTRACT(ctcInfoMp212, algodClient, indexerClient, spec);
+        const evts = await ci.getEvents({ minRound, address, sender: address });
+        const swapEvents =
+          evts.find((el) => el.name === "e_swap_SwapEvent")?.events || [];
+        if (swapEvents.length > 0) await db.setInfo(key, Date.now());
+        break;
+      }
       case "timed_sale_list_1minute": {
+        // 000006
         if (!info) {
-
           const status = await algodClient.status().do();
           const { mp, arc72 } = await import("ulujs");
 
@@ -235,6 +314,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         break;
       }
       case "timed_sale_list_15minutes": {
+        // 000007
         if (!info) {
           const status = await algodClient.status().do();
           const { mp, arc72 } = await import("ulujs");
@@ -283,6 +363,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         break;
       }
       case "timed_sale_list_1hour": {
+        // 000008
         if (!info) {
           const status = await algodClient.status().do();
           const { mp, arc72 } = await import("ulujs");
@@ -330,100 +411,8 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         }
         break;
       }
-      case "swap_list_once": {
-        const spec = {
-          name: "",
-          desc: "",
-          methods: [],
-          events: [
-            {
-              name: "e_swap_ListEvent",
-              args: [
-                {
-                  type: "uint256",
-                  name: "listingId",
-                },
-                {
-                  type: "uint64",
-                  name: "contractId",
-                },
-                {
-                  type: "uint256",
-                  name: "tokenId",
-                },
-                {
-                  type: "uint64",
-                  name: "contractId2",
-                },
-                {
-                  type: "uint256",
-                  name: "tokenId2",
-                },
-                {
-                  type: "uint64",
-                  name: "endTime",
-                },
-              ],
-            },
-          ],
-        };
-        const { CONTRACT } = await import("ulujs");
-        const ci = new CONTRACT(ctcInfoMp212, algodClient, indexerClient, spec);
-        const evts = await ci.getEvents({ minRound, address, sender: address });
-        const listEvents =
-          evts.find((el) => el.name === "e_swap_ListEvent")?.events || [];
-        if (listEvents.length > 0) await db.setInfo(key, Date.now());
-      }        
-      case "swap_execute_once": {
-        const spec = {
-          name: "",
-          desc: "",
-          methods: [],
-          events: [
-            {
-              name: "e_swap_SwapEvent",
-              args: [
-                {
-                  type: "uint256",
-                  name: "listingId",
-                },
-                {
-                  type: "address",
-                  name: "holder1",
-                },
-                {
-                  type: "address",
-                  name: "holder2",
-                },
-              ],
-            },
-          ],
-        };
-        const { CONTRACT } = await import("ulujs");
-        const ci = new CONTRACT(ctcInfoMp212, algodClient, indexerClient, spec);
-        const evts = await ci.getEvents({ minRound, address, sender: address });
-        const swapEvents =
-          evts.find((el) => el.name === "e_swap_SwapEvent")?.events || [];
-        if (swapEvents.length > 0) await db.setInfo(key, Date.now());
-      }
-      case "faucet_drip_once": {
-        if (!info) {
-          const { arc200 } = await import("ulujs");
-          const ci = new arc200(data.contractId, algodClient, indexerClient);
-          const faucetAddress =
-            "2CMESXKIAZ5HLRKGGC3RBS7XYDXK5WPH3LRN4J4ICUHNTJQIYJQPH6KX3M";
-          const evts = await ci.arc200_Transfer({
-            minRound,
-            address: faucetAddress,
-            sender: faucetAddress,
-          });
-          const fEvts = evts.filter((evt) => {
-            const addrTo = evt[4];
-            return addrTo === address;
-          });
-          if (fEvts.length > 0) await db.setInfo(key, Date.now());
-        }
       case "hmbl_pool_swap": {
+        // 000009
         if (!info) {
           const { swap } = await import("ulujs");
           const ci = new swap(poolId, algodClient, indexerClient);
@@ -438,6 +427,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         break;
       }
       case "hmbl_pool_add": {
+        // 000010
         if (!info) {
           const { swap } = await import("ulujs");
           const ci = new swap(poolId, algodClient, indexerClient);
@@ -453,6 +443,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         break;
       }
       case "hmbl_token_create": {
+        // 000011
         if (!info) {
           const { swap } = await import("ulujs");
           const ci = new swap(tokenId, algodClient, indexerClient);
@@ -479,6 +470,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         break;
       }
       case "hmbl_pool_create": {
+        // 000012
         if (!info) {
           const { swap } = await import("ulujs");
           const ci = new swap(poolId, algodClient, indexerClient);
@@ -505,9 +497,15 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
         break;
       }
       case "hmbl_farm_stake": {
+        // 000013
         if (!info) {
           const { abi, CONTRACT } = await import("ulujs");
-          const ci = new CONTRACT(contractId, algodClient, indexerClient, abi.stakr200);
+          const ci = new CONTRACT(
+            contractId,
+            algodClient,
+            indexerClient,
+            abi.stakr200
+          );
           const evts = (
             await ci.Stake({
               minRound: Math.max(0, (await getLastRound()) - 1000),
@@ -518,18 +516,22 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
           ).slice(0, 1);
           const fEvts = evts.filter((evt) => {
             const addr = evt[4];
-            return (
-              addr === address
-            );
+            return addr === address;
           });
           if (fEvts.length > 0) await db.setInfo(key, Date.now());
         }
         break;
       }
       case "hmbl_farm_claim": {
+        // 000014
         if (!info) {
           const { abi, CONTRACT } = await import("ulujs");
-          const ci = new CONTRACT(contractId, algodClient, indexerClient, abi.stakr200);
+          const ci = new CONTRACT(
+            contractId,
+            algodClient,
+            indexerClient,
+            abi.stakr200
+          );
           const evts = (
             await ci.Harvest({
               minRound: Math.max(0, (await getLastRound()) - 1000),
@@ -540,18 +542,22 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
           ).slice(0, 1);
           const fEvts = evts.filter((evt) => {
             const addr = evt[4];
-            return (
-              addr === address
-            );
+            return addr === address;
           });
           if (fEvts.length > 0) await db.setInfo(key, Date.now());
         }
         break;
       }
       case "hmbl_farm_create": {
+        // 000015
         if (!info) {
           const { abi, CONTRACT } = await import("ulujs");
-          const ci = new CONTRACT(contractId, algodClient, indexerClient, abi.stakr200);
+          const ci = new CONTRACT(
+            contractId,
+            algodClient,
+            indexerClient,
+            abi.stakr200
+          );
           const evts = (
             await ci.Pool({
               minRound: Math.max(0, (await getLastRound()) - 1000),
@@ -562,10 +568,30 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
           ).slice(0, 1);
           const fEvts = evts.filter((evt) => {
             const addr = evt[4];
-            return (
-              addr === address
-            );
+            return addr === address;
+          });
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
+        }
         break;
+      }
+      case "faucet_drip_once": {
+        // 000016
+        if (!info) {
+          const { arc200 } = await import("ulujs");
+          const ci = new arc200(data.contractId, algodClient, indexerClient);
+          const faucetAddress =
+            "2CMESXKIAZ5HLRKGGC3RBS7XYDXK5WPH3LRN4J4ICUHNTJQIYJQPH6KX3M";
+          const evts = await ci.arc200_Transfer({
+            minRound,
+            address: faucetAddress,
+            sender: faucetAddress,
+          });
+          const fEvts = evts.filter((evt) => {
+            const addrTo = evt[4];
+            return addrTo === address;
+          });
+          if (fEvts.length > 0) await db.setInfo(key, Date.now());
+        }
       }
       default:
         break; // impossible
