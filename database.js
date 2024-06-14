@@ -103,6 +103,24 @@ class Database {
             [key, value]
         );
     }
+
+
+    // quest score methods
+
+
+    async getScores() {
+       return await this.all(
+	       `
+	       SELECT
+	       SUBSTR(key, INSTR(key, ':') + 1) AS address,
+	       COUNT(key) AS score, 
+	       MAX(value) AS last_activity
+	       FROM info
+	       GROUP BY address ORDER BY last_activity DESC;
+	       `
+       );
+    }
+
 }
 
 module.exports = {

@@ -138,6 +138,13 @@ const validateAction = (req, res, next) => {
 
 // routes
 
+app.get("/score", async (req, res) => {
+  const scores = await db.getScores();
+  return res.status(200).json({
+    scores
+  });
+});
+
 app.get("/quest", validateKey, async (req, res) => {
   const key = req.query.key;
   // validate key
