@@ -111,16 +111,43 @@ class Database {
     async getScores() {
        return await this.all(
 	       `
-	       SELECT
-	       SUBSTR(key, INSTR(key, ':') + 1) AS address,
-	       COUNT(key) AS score, 
-	       MAX(value) AS last_activity
-	       FROM info
-	       GROUP BY address ORDER BY last_activity DESC;
+	WITH regular_scores AS (
+            SELECT
+                SUBSTR(key, INSTR(key, ':') + 1) AS address,
+                COUNT(key) AS score,
+                MAX(value) AS last_activity
+            FROM info
+            WHERE key NOT LIKE '%_daily'
+            GROUP BY address
+        ),
+        daily_scores AS (
+            SELECT
+                SUBSTR(key, INSTR(key, ':') + 1) AS address,
+                SUM(CAST(value AS INTEGER)) AS score
+            FROM info
+            WHERE key LIKE '%_daily'
+            GROUP BY address
+        )
+
+        SELECT
+            r.address,
+            (IFNULL(r.score, 0) + IFNULL(d.score, 0)) AS total_score,
+            r.last_activity
+        FROM regular_scores r
+        LEFT JOIN daily_scores d ON r.address = d.address
+
+        UNION ALL
+
+        SELECT
+            d.address,
+            d.score AS score,
+            NULL AS last_activity
+        FROM daily_scores d
+        LEFT JOIN regular_scores r ON d.address = r.address
+        WHERE r.address IS NULL
 	       `
        );
     }
-
 }
 
 module.exports = {
