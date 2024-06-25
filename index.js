@@ -94,6 +94,7 @@ const validateAction = (req, res, next) => {
     case "hmbl_pool_create":
     case "hmbl_pool_add":
     case "hmbl_pool_swap":
+    case "hmbl_pool_swap_daily":
       const { poolId } = data;
       if (isNaN(Number(poolId))) {
         return res.status(400).json({ message: "Invalid pool id" });
@@ -435,6 +436,38 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
           });
           if (evts.length > 0) await db.setInfo(key, Date.now());
         }
+        break;
+      }
+      case "hmbl_pool_swap_daily": {
+	const parentKey = `hmbl_pool_swap:${address}`;
+	const lastInfo = await db.getInfo(parentKey);
+        if (lastInfo) {
+	  const now = Date.now();
+	  const lastValue = Number(lastInfo.value);
+	  const diff = Math.abs(now - lastValue);
+	  console.log({ now, lastValue, diff });
+	  const threshold = 86400 * 1000; // day_ms
+	  if(diff > threshold) {
+		if(info) {
+			const lastValue = Number(info.value);
+	  		const { swap } = await import("ulujs");
+          		const ci = new swap(poolId, algodClient, indexerClient);
+          		const evts = await ci.SwapEvents({
+            			minRound: Math.max(0, (await getLastRound()) - 1000),
+            			address,
+            			sender: address,
+            			limit: 10,
+          		});
+          		if (evts.length > 0) {
+				await db.setInfo(key, lastValue + 1);
+				await db.setInfo(parentKey, Date.now());
+			}
+		} else {
+			await db.setInfo(key, 1);
+			await db.setInfo(parentKey, Date.now());
+		}
+	  }
+        } 
         break;
       }
       case "hmbl_pool_add": {
