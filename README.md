@@ -60,6 +60,7 @@ Here's an example table:
 | 000014 | hmbl_farm_claim | Humble Quest: Claim farm rewards | ONCE |
 | 000015 | hmbl_farm_create | Humble Quest: Create farm | ONCE |
 | 000016 | faucet_drip_once | Faucet Quest: Drip 1000 VIA from faucet<br />Guides: [Nautilus](https://confused-timbale-d13.notion.site/Faucet-Quest-Faucet-Quest-Drip-1000-VIA-from-faucet-9f479e6a507a49b48f0d25487e3f3540) | ONCE |
+| 000017 | hmbl_pool_swap | Humble Quest: Swap again | DAILY |
 
 ## Contributing
 
