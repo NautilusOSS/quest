@@ -521,7 +521,7 @@ app.post("/quest", cors(corsOptions), validateAction, async (req, res) => {
               sender: address,
               limit: 1,
             })
-          ).slice(0, 1);
+          )//.slice(0, 1);
           console.log(evts);
           const fEvts = evts.filter((evt) => {
             const addrFrom = evt[3];
