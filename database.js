@@ -125,7 +125,7 @@ class Database {
                 SUBSTR(key, INSTR(key, ':') + 1) AS address,
                 SUM(CAST(value AS INTEGER)) AS score
             FROM info
-            WHERE key LIKE '%_daily'
+            WHERE key LIKE '%_daily:%'
             GROUP BY address
         )
 
